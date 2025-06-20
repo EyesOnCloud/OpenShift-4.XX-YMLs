@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: seccomp-installer
+  namespace: openshift-config
+  labels:
+    app: seccomp
+spec:
+  selector:
+    matchLabels:
+      app: seccomp
+  template:
+    metadata:
+      labels:
+        app: seccomp
+    spec:
+      initContainers:
+      - name: installer
+        image: alpine:3.10
+        command:
+          - "/bin/sh"
+          - "-c"
+          - |
+            echo "[DEBUG] Listing /seccomp"
+            ls -l /seccomp
+            echo "[DEBUG] Copying profile..."
+            cp -v /seccomp/*.json /host/seccomp/
+            echo "[DEBUG] Done"
+        volumeMounts:
+        - name: profiles
+          mountPath: /seccomp
+        - name: hostseccomp
+          mountPath: /host/seccomp
+      containers:
+      - name: pause
+        image: registry.k8s.io/pause:3.1
+      volumes:
+      - name: hostseccomp
+        hostPath:
+          path: /var/lib/kubelet/seccomp
+      - name: profiles
+        configMap:
+          name: seccomp-profile
