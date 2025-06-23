@@ -10,4 +10,4 @@ spec:
     securityContext:
       seccompProfile:
         type: Localhost
-        localhostProfile: "my-profile.json"
+        localhostProfile: "profiles/my-profile.json"
