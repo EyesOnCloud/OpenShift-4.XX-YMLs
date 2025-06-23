@@ -22,22 +22,26 @@ spec:
           - "-c"
           - |
             echo "[DEBUG] Listing /seccomp"
-            ls -l /seccomp
-            echo "[DEBUG] Copying profile..."
-            cp -v /seccomp/*.json /host/seccomp/
+            ls -l /seccomp || true
+            echo "[DEBUG] Copying profile to /host/profiles/"
+            mkdir -p /host/profiles
+            cp -v /seccomp/*.json /host/profiles/ || true
             echo "[DEBUG] Done"
+        securityContext:
+          privileged: true
         volumeMounts:
         - name: profiles
           mountPath: /seccomp
         - name: hostseccomp
-          mountPath: /host/seccomp
+          mountPath: /host/profiles
       containers:
       - name: pause
         image: registry.k8s.io/pause:3.1
       volumes:
       - name: hostseccomp
         hostPath:
-          path: /var/lib/kubelet/seccomp
+          path: /var/lib/kubelet/seccomp/profiles
+          type: DirectoryOrCreate
       - name: profiles
         configMap:
           name: seccomp-profile
