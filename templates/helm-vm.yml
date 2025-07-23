@@ -1,0 +1,45 @@
+{{- $values := .Values }}
+{{- range $i := until (int $values.replicaCount) }}
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: {{ printf "%s-%d" $values.vmTemplate.baseName $i }}
+spec:
+  running: true
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: {{ printf "%s-%d" $values.vmTemplate.baseName $i }}
+    spec:
+      domain:
+        resources:
+          requests:
+            memory: {{ $values.vmTemplate.memory }}
+        devices:
+          disks:
+            - name: rootdisk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+      volumes:
+        - name: rootdisk
+          containerDisk:
+            image: {{ $values.vmTemplate.image }}
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              users:
+                - name: {{ printf "%s%d" $values.vmTemplate.baseName $i }}
+                  groups: users
+                  shell: /bin/bash
+                  sudo: ALL=(ALL) NOPASSWD:ALL
+                  lock_passwd: false
+                  passwd: {{ printf "%s%d" $values.vmTemplate.basePassword $i | b64enc }}
+              chpasswd:
+                expire: false
+              ssh_pwauth: true
+---
+{{- end }}
