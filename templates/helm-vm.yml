@@ -3,18 +3,32 @@
 apiVersion: kubevirt.io/v1
 kind: VirtualMachine
 metadata:
-  name: {{ printf "%s-%d" $values.vmTemplate.baseName $i }}
+  name: {{ printf "%s-%d" $values.vmTemplate.baseNameVM $i }}
+  namespace: {{ $values.vmTemplate.namespace }}
+  annotations:
+    description: Fedora VM {{ $i }}
+  labels:
+    app: {{ printf "%s-%d" $values.vmTemplate.baseNameVM $i }}
+    os.template.kubevirt.io/fedora: 'true'
 spec:
-  running: true
+  runStrategy: {{ $values.vmTemplate.runStrategy }}
   template:
     metadata:
+      annotations:
+        vm.kubevirt.io/flavor: small
+        vm.kubevirt.io/os: fedora
+        vm.kubevirt.io/workload: server
       labels:
-        kubevirt.io/domain: {{ printf "%s-%d" $values.vmTemplate.baseName $i }}
+        kubevirt.io/domain: {{ printf "%s-%d" $values.vmTemplate.baseNameVM $i }}
+        kubevirt.io/size: small
     spec:
       domain:
-        resources:
-          requests:
-            memory: {{ $values.vmTemplate.memory }}
+        cpu:
+          cores: {{ $values.vmTemplate.cpuCores }}
+          sockets: {{ $values.vmTemplate.cpuSockets }}
+          threads: {{ $values.vmTemplate.cpuThreads }}
+        memory:
+          guest: {{ $values.vmTemplate.memory }}
         devices:
           disks:
             - name: rootdisk
@@ -23,6 +37,26 @@ spec:
             - name: cloudinitdisk
               disk:
                 bus: virtio
+          interfaces:
+            - name: default
+              model: virtio
+              masquerade: {}
+          rng: {}
+          networkInterfaceMultiqueue: true
+        features:
+          acpi: {}
+          smm:
+            enabled: true
+        firmware:
+          bootloader:
+            efi: {}
+        machine:
+          type: q35
+      hostname: {{ printf "%s-%d" $values.vmTemplate.baseNameVM $i }}
+      networks:
+        - name: default
+          pod: {}
+      terminationGracePeriodSeconds: 180
       volumes:
         - name: rootdisk
           containerDisk:
@@ -31,15 +65,8 @@ spec:
           cloudInitNoCloud:
             userData: |
               #cloud-config
-              users:
-                - name: {{ printf "%s%d" $values.vmTemplate.baseName $i }}
-                  groups: users
-                  shell: /bin/bash
-                  sudo: ALL=(ALL) NOPASSWD:ALL
-                  lock_passwd: false
-                  passwd: {{ printf "%s%d" $values.vmTemplate.basePassword $i | b64enc }}
-              chpasswd:
-                expire: false
-              ssh_pwauth: true
+              user: {{ printf "%s%d" $values.vmTemplate.baseNameUser $i }}
+              password: {{ printf "%s%d" $values.vmTemplate.basePassword $i }}
+              chpasswd: { expire: False }
 ---
 {{- end }}
