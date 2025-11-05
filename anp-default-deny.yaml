@@ -1,0 +1,23 @@
+apiVersion: admin.openshift.io/v1
+kind: AdminNetworkPolicy
+metadata:
+  name: default-deny-all-ingress
+spec:
+  priority: 10
+  subject:
+    namespaces: []  # Applies to all namespaces
+  ingress:
+    - action: Deny
+      from: []      # Deny all inbound traffic
+  egress:
+    - action: Allow
+      to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: openshift-dns
+          podSelector:
+            matchLabels:
+              app: dns-default
+      ports:
+        - protocol: UDP
+          port: 53
