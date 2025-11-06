@@ -9,7 +9,7 @@ data:
       server {
         listen 8080;
         location / {
-          return 200 "NGINX Version: 1.21\n";
+          return 200 "NGINX Version: Unprivileged\n";
           default_type text/plain;
         }
       }
