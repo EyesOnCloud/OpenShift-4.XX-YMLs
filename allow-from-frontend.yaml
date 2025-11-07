@@ -13,7 +13,7 @@ spec:
   - from:
     - namespaceSelector:
         matchLabels:
-          kubernetes.io/metadata.name: frontend
+          allow-to-backend: "true"
     ports:
     - protocol: TCP
       port: 8080
