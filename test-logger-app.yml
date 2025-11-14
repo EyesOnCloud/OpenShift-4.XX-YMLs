@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sample-logger
+  namespace: test-logging
+spec:
+  containers:
+  - name: logger
+    image: busybox
+    command: ["/bin/sh", "-c"]
+    args:
+      - |
+        i=0;
+        while true; do
+          echo "INFO [app] User login successful - user_id=123, ip=10.0.0.$((i++ % 255))";
+          echo "ERROR [db] Connection timeout - retry=3";
+          sleep 3;
+        done
