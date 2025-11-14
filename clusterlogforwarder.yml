@@ -1,0 +1,27 @@
+apiVersion: logging.openshift.io/v1
+kind: ClusterLogForwarder
+metadata:
+  name: instance
+  namespace: openshift-logging
+spec:
+  outputs:
+    - name: loki
+      type: lokistack
+      lokistack:
+        name: logging-loki
+  pipelines:
+    - name: to-loki-app
+      inputRefs:
+        - application
+      outputRefs:
+        - loki
+    - name: to-loki-infra
+      inputRefs:
+        - infrastructure
+      outputRefs:
+        - loki
+    - name: to-loki-audit
+      inputRefs:
+        - audit
+      outputRefs:
+        - loki
