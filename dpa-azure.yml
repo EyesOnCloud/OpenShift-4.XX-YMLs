@@ -1,0 +1,30 @@
+apiVersion: oadp.openshift.io/v1alpha1
+kind: DataProtectionApplication
+metadata:
+  name: velero
+  namespace: openshift-adp
+spec:
+  configuration:
+    velero:
+      defaultPlugins:
+        - azure
+        - openshift
+  backupLocations:
+    - name: default
+      velero:
+        provider: azure
+        default: true
+        objectStorage:
+          bucket: velero
+        config:
+          resourceGroup: <your-aro-resource-group>
+          storageAccount: <your-storage-account-name>
+      credential:
+        name: cloud-credentials
+        key: cloud
+  snapshotLocations:
+    - name: default
+      velero:
+        provider: azure
+        config:
+          apiTimeout: 5m
