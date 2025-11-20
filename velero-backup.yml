@@ -2,10 +2,13 @@ apiVersion: velero.io/v1
 kind: Backup
 metadata:
   name: nginx-backup
+  labels:
+    velero.io/storage-location: default
   namespace: openshift-adp
 spec:
+  hooks: {}
   includedNamespaces:
-    - velero-test
-  storageLocation: default
-  snapshotVolumes: true
+  - velero-test
+  storageLocation: velero-azure-default-1
+  defaultVolumesToRestic: true
   ttl: 72h
