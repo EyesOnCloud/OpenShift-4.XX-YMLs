@@ -7,24 +7,36 @@ spec:
   configuration:
     velero:
       defaultPlugins:
-        - azure
-        - openshift
+        - openshift   
+        - azure       
+      resourceTimeout: 10m   
+      backupImages: false     
+    nodeAgent:
+      enable: true
+      uploaderType: restic
+      podConfig:
+        nodeSelector: {}     
   backupLocations:
-    - name: default
+    - name: velero-azure-default-1
       velero:
         provider: azure
         default: true
         objectStorage:
           bucket: velero
+          prefix: velero      
         config:
           resourceGroup: <your-aro-resource-group>
           storageAccount: <your-storage-account-name>
-      credential:
-        name: cloud-credentials
-        key: cloud
+          subscriptionId: <subscription-ID>
+        credential:
+          key: cloud
+          name: cloud-credentials-azure
   snapshotLocations:
-    - name: default
+    - name: velero-azure-default-1
       velero:
         provider: azure
         config:
+          resourceGroup: <your-aro-resource-group>
+          subscriptionId: <subscription-ID>
           apiTimeout: 5m
+          incremental: "true" 
