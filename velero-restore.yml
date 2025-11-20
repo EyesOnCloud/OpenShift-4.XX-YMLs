@@ -5,3 +5,4 @@ metadata:
   namespace: openshift-adp
 spec:
   backupName: nginx-backup
+  restorePVs: true
