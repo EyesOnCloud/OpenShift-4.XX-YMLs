@@ -1,0 +1,99 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+labels:
+  template: hello
+metadata:
+  annotations:
+    description: This is an example of application template in OpenShift 4
+    iconClass: default
+    tags: hello, world
+  name: hello-world-template
+  namespace: templates
+objects:
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: hello-world-html
+  data:
+    index.html: |
+      <!DOCTYPE html>
+      <html>
+      <head><title>Hello</title></head>
+      <body>
+        <h1>${GREETING_MESSAGE}</h1>
+      </body>
+      </html>
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: hello-world-service
+  spec:
+    ports:
+    - name: http
+      nodePort: 0
+      port: ${{SERVICE_PORT}}
+      protocol: TCP
+      targetPort: ${{INTERNAL_PORT}}
+    selector:
+      name: hello
+- apiVersion: v1
+  kind: ReplicationController
+  metadata:
+    name: hello-world-rc
+  spec:
+    replicas: 1
+    selector:
+      name: hello
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          name: hello
+      spec:
+        containers:
+        - env:
+          - name: GREETING_MESSAGE
+            value: ${GREETING_MESSAGE}
+          image: nginxinc/nginx-unprivileged:1.25
+          imagePullPolicy: IfNotPresent
+          name: hello
+          ports:
+          - containerPort: ${{INTERNAL_PORT}}
+            name: http
+            protocol: TCP
+          resources:
+            limits:
+              cpu: 25m
+              memory: 128Mi
+          securityContext:
+            privileged: false
+          livenessProbe:
+            tcpSocket:
+              port: ${{INTERNAL_PORT}}
+            timeoutSeconds: 1
+            initialDelaySeconds: 30
+          terminationMessagePath: /dev/termination-log
+          volumeMounts:
+          - name: html
+            mountPath: /usr/share/nginx/html
+            readOnly: true
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        serviceAccount: ""
+        volumes:
+        - name: html
+          configMap:
+            name: hello-world-html
+parameters:
+- description: The internal port used by the pods
+  name: INTERNAL_PORT
+  value: "8080"
+  required: true
+- description: The port exposed by the service
+  name: SERVICE_PORT
+  value: "8080"
+  required: true
+- description: Greeting message
+  name: GREETING_MESSAGE
+  value: "Hello OpenShift"
+  required: true
